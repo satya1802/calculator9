@@ -19,5 +19,5 @@ Built from recorded links, not written by a model: requirement key → plan item
 | US-008 | EPIC-003 | Friendly message for division by zero | US-008 | 2 | spa | — | — | not started | not run | 0 | No tests | 0/2 tested · 0/2 passing | — |
 | US-009 | EPIC-003 | Friendly message for invalid input | US-009 | 2 | spa | — | — | not started | not run | 0 | No tests | 0/1 tested · 0/1 passing | — |
 | US-010 | EPIC-004 | Use the calculator on desktop and mobile | US-010 | 2 | spa | — | — | not started | not run | 0 | No tests | 0/2 tested · 0/2 passing | — |
-| US-011 | EPIC-004 | Use the calculator anonymously and free | US-011 | 2 | api, spa | — | — | not started | not run | 0 | No tests | 0/1 tested · 0/1 passing | — |
+| US-011 | EPIC-004 | Use the calculator anonymously and free | US-011 | 2 | spa | — | — | not started | not run | 0 | No tests | 0/1 tested · 0/1 passing | — |
 <!-- sdlc:auto:end matrix -->
