@@ -9,9 +9,9 @@ Pushes to `main` run `.github/workflows/deploy.yml`, which builds the API image 
 <!-- sdlc:auto:start environments -->
 | Name | Service | Runtime | Scaling | Environment |
 |---|---|---|---|---|
-| Calculator SPA Host | S3 static website (built React 19 bundle) | Static assets over HTTPS | Serverless/static — scales automatically with request volume at near-zero cost | dev |
-| Serving API | FastAPI 0.115 on a small AWS compute instance | Python 3.12 / Uvicorn | Single small instance; sufficient as it serves only a health check | dev |
-| PostgreSQL (unused) | Amazon RDS for PostgreSQL 16 | PostgreSQL 16 | Smallest instance; provisioned for stack completeness, carries no data | dev |
+| SPA Static Host | AWS S3 + CloudFront (static website) | Static assets (React 19 build) | CDN edge caching; scales automatically with traffic | dev |
+| Page/Health API | AWS (container or App Runner) | FastAPI 0.115 on Python 3.12 (Uvicorn) | Single small instance; scale-to-low for near-zero cost | dev |
+| PostgreSQL (provisioned, unused) | AWS RDS for PostgreSQL 16 | PostgreSQL 16 | Smallest instance; no application traffic | dev |
 <!-- sdlc:auto:end environments -->
 
 <!-- sdlc:auto:start live -->
@@ -21,9 +21,9 @@ _Not deployed yet._
 <!-- sdlc:auto:start topology -->
 ```mermaid
 graph LR
-  n_Calculator_SPA_Host["Calculator SPA Host<br/>S3 static website (built React 19 bundle)"]
-  n_Serving_API["Serving API<br/>FastAPI 0.115 on a small AWS compute instance"]
-  n_PostgreSQL__unused_["PostgreSQL (unused)<br/>Amazon RDS for PostgreSQL 16"]
-  n_Calculator_SPA_Host -->|"HTTPS"| n_Serving_API
+  n_SPA_Static_Host["SPA Static Host<br/>AWS S3 + CloudFront (static website)"]
+  n_Page_Health_API["Page/Health API<br/>AWS (container or App Runner)"]
+  n_PostgreSQL__provisioned__unused_["PostgreSQL (provisioned, unused)<br/>AWS RDS for PostgreSQL 16"]
+  n_SPA_Static_Host -->|"HTTPS"| n_Page_Health_API
 ```
 <!-- sdlc:auto:end topology -->

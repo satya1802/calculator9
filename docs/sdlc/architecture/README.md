@@ -5,105 +5,83 @@
 <!-- sdlc:auto:start narrative -->
 ## Overview
 
-### ARCH-COMP-web_spa · approved · source: architecture:web_spa
+### ARCH-SUMMARY · approved · source: architecture:v2
 
-Calculator Web App is the React 19 single-page app that renders the keypad/display and performs all arithmetic in-browser.
+calculator9 is a lightweight, single-page arithmetic calculator that runs entirely in the browser, with no accounts, payments, persistence, or history.
 
-Component: Calculator Web App (React 19). Responsibilities: renders responsive digit/operator buttons and live display; captures both on-screen taps and physical keyboard input; executes addition, subtraction, multiplication, division and percent entirely client-side; shows friendly error messages for division by zero and invalid/incomplete entry instead of crashing. Nothing is persisted between sessions -- no local storage, no server round-trip for calculation.
+Approved architecture, version 2. A React 19 SPA renders the display and on-screen buttons, captures both click/tap and physical-keyboard input, evaluates add/subtract/multiply/divide/percent client-side, and shows friendly messages for division by zero and invalid input. FastAPI 0.115 exists only to serve the page and a health check. PostgreSQL 16 is named per the approved stack for completeness but is never read from or written to. Hosted on AWS, with the SPA and API served from two separate origins.
 
-**Related:** US-001, US-002, US-006, US-007, US-008, US-009
+### ARCH-COMP-SPA · approved · source: architecture:v2
 
-### ARCH-COMP-api · approved · source: architecture:api
+Calculator Web App (SPA), built with React 19, is the entire user-facing product.
 
-Static Serving API is a thin FastAPI 0.115 service whose only job is serving the built page and a health check.
+Renders the responsive calculator UI, captures on-screen button presses and physical keyboard input, evaluates all arithmetic (add, subtract, multiply, divide, percent) client-side, updates the live display, handles clear/reset, and shows friendly errors for divide-by-zero and invalid input. Nothing is stored between sessions -- state lives only in the running page.
 
-Component: Static Serving API (FastAPI 0.115). Does no calculation and holds no business logic -- all arithmetic lives in the browser. Its presence exists to satisfy the approved backend-stack choice rather than to do meaningful server-side work. Exposes the GET /healthz endpoint for liveness checks.
+### ARCH-COMP-API · approved · source: architecture:v2
 
-### ARCH-COMP-db · approved · source: architecture:db
+Static/Page Server (API), built with FastAPI 0.115, serves the calculator page and a health check.
 
-PostgreSQL 16 is provisioned to satisfy the approved database layer but is never read from or written to.
+Does no calculation and holds no business logic -- all arithmetic is client-side in the SPA. Exists named per the approved technology stack rather than for functional necessity.
 
-Component: PostgreSQL (unused), PostgreSQL 16. The product stores no data at all -- no tables, no rows, no accounts -- so the database is provisioned for completeness only and never accessed by the application.
+### ARCH-COMP-DB · approved · source: architecture:v2
 
-### ARCH-PATH-evaluate · approved · source: architecture:critical_path:Evaluate an arithmetic calculation
+PostgreSQL 16 is listed in the approved stack for completeness but is unused by the product.
 
-Primary critical path: user enters operands and an operator, presses equals, and the SPA evaluates and displays the result in-browser.
+This product stores no data, so no tables are created and the application neither reads from nor writes to the database. Provisioned solely to match the approved stack.
 
-User enters operands and an operator via on-screen buttons or physical keyboard, presses equals, and the SPA evaluates the expression client-side and shows the result. Division by zero and incomplete/invalid entries yield a friendly message instead of a crash. Covers requirements US-001, US-002, US-006, US-008, US-009.
+### ARCH-PATH-001 · approved · source: architecture:v2
 
-**Related:** US-001, US-002, US-006, US-008, US-009, ARCH-COMP-web_spa
+Critical path: evaluating a basic arithmetic calculation end to end in the SPA.
 
-### ARCH-PATH-clear · approved · source: architecture:critical_path:Clear and reset
+User enters an operand, an operator, a second operand and equals via on-screen buttons or keyboard. The SPA keeps the entry in component state, updates the display on each input, and computes the result client-side on equals. Division by zero and malformed entries produce a friendly message instead of a crash.
 
-Secondary critical path: user presses clear to discard the current entry or dismiss an error, resetting the display to 0.
+### ARCH-ENDPOINT-HEALTHZ · approved · source: architecture:v2
 
-User presses clear to discard the current value or in-progress calculation, or to dismiss an error message, returning the display to 0. Covers requirement US-007.
+GET /healthz is the only API endpoint, used for liveness checks.
 
-**Related:** US-007, ARCH-COMP-web_spa
+Liveness/health check for the page server so the AWS deployment can confirm the service is up. No calculation or business logic is exposed via the API.
 
-### ARCH-ENDPOINT-healthz · approved · source: architecture:endpoint:GET /healthz
+### ARCH-DEPLOY-SPA · approved · source: architecture:v2
 
-Single documented endpoint: a liveness probe exposed by the serving API.
+SPA Static Host deployment node serves the built React app as static assets.
 
-GET /healthz -- liveness probe for the Static Serving API. Returns a simple status so the deployment pipeline can confirm the service is up. This is the only endpoint defined in the architecture; no calculation endpoints exist since arithmetic is client-side.
+Hosted on AWS S3 + CloudFront as a static website, serving the static assets produced by the React 19 build.
 
-**Related:** ARCH-COMP-api
+### ARCH-DEPLOY-API · approved · source: architecture:v2
 
-### ARCH-DEPLOY-spa · approved · source: architecture:deployment_node:Calculator SPA Host
+Page/Health API deployment node runs the FastAPI service.
 
-The built React SPA is hosted as a static website on S3, served over HTTPS.
+Hosted on AWS (container or App Runner), running FastAPI 0.115 on Python 3.12 via Uvicorn.
 
-Deployment node: Calculator SPA Host -- S3 static website hosting the built React 19 bundle; static assets served over HTTPS.
+### ARCH-DEPLOY-DB · approved · source: architecture:v2
 
-**Related:** ARCH-COMP-web_spa
+PostgreSQL deployment node is provisioned but unused.
 
-### ARCH-DEPLOY-api · approved · source: architecture:deployment_node:Serving API
+Hosted on AWS RDS for PostgreSQL 16. Provisioned per the approved stack for completeness; the application does not connect to or use it.
 
-The FastAPI serving layer runs on a small AWS compute instance.
+### ARCH-TECH-FRONTEND · approved · source: architecture:v2
 
-Deployment node: Serving API -- FastAPI 0.115 running on a small AWS compute instance, using Python 3.12 and Uvicorn.
+Frontend technology decision: React 19.
 
-**Related:** ARCH-COMP-api, ARCH-ENDPOINT-healthz
+Chosen over Vue, Svelte, and Vanilla JS. The entire product is a single in-browser page; React 19 keeps the display in sync with every button press and keystroke via component state, and builds one responsive page that works on phone and desktop, matching the input/display/error capabilities in scope.
 
-### ARCH-DEPLOY-db · approved · source: architecture:deployment_node:PostgreSQL (unused)
+### ARCH-TECH-BACKEND · approved · source: architecture:v2
 
-An unused PostgreSQL 16 instance is provisioned via Amazon RDS for stack completeness.
+Backend technology decision: FastAPI 0.115.
 
-Deployment node: PostgreSQL (unused) -- Amazon RDS for PostgreSQL 16. Provisioned but never read from or written to, since the application persists no data.
+Chosen over Flask, Node/Express, and static-only hosting. All calculation is client-side, so the backend does little more than serve the page and a health check. FastAPI 0.115 is the lightest, fastest option to stand up and never gets in the way for a product this simple.
 
-**Related:** ARCH-COMP-db
+### ARCH-TECH-DATABASE · approved · source: architecture:v2
 
-### ARCH-TECH-frontend · approved · source: architecture:technology_decision:Frontend
+Database technology decision: PostgreSQL 16, named but unused.
 
-Frontend technology choice: React 19, built as a Vite SPA, over alternatives Vanilla JS, Vue, and Svelte.
+Chosen over SQLite and no database, per the approved stack for completeness. The product stores nothing between sessions and has no accounts, so no schema is defined and no queries are issued.
 
-Decision: React 19 drives the whole product -- it keeps the on-screen number in sync with every button press and keystroke via component state, and produces one responsive page that works the same on phone and desktop. Built as a Vite SPA reading the VITE_API_BASE_URL environment variable. Alternatives considered: Vanilla JS, Vue, Svelte.
+### ARCH-TECH-CLOUD · approved · source: architecture:v2
 
-**Related:** ARCH-COMP-web_spa
+Cloud technology decision: AWS.
 
-### ARCH-TECH-backend · approved · source: architecture:technology_decision:Backend
-
-Backend technology choice: FastAPI 0.115, named per the approved stack, over alternatives Flask and Node/Express.
-
-Decision: FastAPI 0.115 was named in the approved stack. In this design it does little more than serve the calculator page and a health check, since all calculation is client-side and there is no real server-side work. Alternatives considered: Flask, Node/Express.
-
-**Related:** ARCH-COMP-api
-
-### ARCH-TECH-database · approved · source: architecture:technology_decision:Database
-
-Database technology choice: PostgreSQL 16, named for completeness with the approved stack; the only listed alternative was no persistence at all.
-
-Decision: PostgreSQL 16 was named in the approved stack for completeness. The calculator stores nothing between sessions and has no accounts, so no schema exists and the database is never read or written. Alternative considered: None (no persistence needed).
-
-**Related:** ARCH-COMP-db
-
-### ARCH-TECH-cloud · approved · source: architecture:technology_decision:Cloud
-
-Cloud technology choice: AWS, over alternatives Cloudflare Pages, Netlify, and Azure.
-
-Decision: Hosting means putting one responsive page on the internet reliably and cheaply. AWS (S3 for the static SPA, a small instance for the API) does this at essentially no cost for this traffic profile and scales without attention if the page is shared widely. Alternatives considered: Cloudflare Pages, Netlify, Azure.
-
-**Related:** ARCH-DEPLOY-spa, ARCH-DEPLOY-api, ARCH-DEPLOY-db
+Chosen over Cloudflare Pages, Netlify, and Vercel. Hosting means putting one responsive page on the internet reliably and cheaply. AWS (S3 + CloudFront for the SPA, a small compute host for the API) does this at essentially no cost for this traffic profile and scales without attention if the page is shared widely.
 <!-- sdlc:auto:end narrative -->
 
 <!-- sdlc:auto:start building-blocks -->
@@ -111,14 +89,14 @@ Decision: Hosting means putting one responsive page on the internet reliably and
 
 | ID | Name | Technology | Responsibility | Depends on |
 |---|---|---|---|---|
-| web_spa | Calculator Web App | React 19 | Responsive single-page calculator UI: renders digit/operator buttons and display, captures on-screen taps and physical keyboard input, runs all arithmetic (add, subtract, multiply, divide, percent) client-side, and shows friendly error messages for division by zero and invalid input. Nothing is persisted between sessions. | — |
-| api | Static Serving API | FastAPI 0.115 | Serves the built calculator page and exposes a health endpoint. Does no calculation and holds no business logic — all arithmetic is client-side. Named per the approved stack to satisfy the backend choice. | — |
-| db | PostgreSQL (unused) | PostgreSQL 16 | Provisioned to satisfy the approved database layer. This product stores no data at all — no tables, no rows — so the database is never read from or written to. | — |
+| spa | Calculator Web App (SPA) | React 19 | Renders the responsive calculator UI, captures on-screen button presses and physical keyboard input, evaluates all arithmetic (add, subtract, multiply, divide, percent) client-side, updates the live display, handles clear/reset, and shows friendly errors for divide-by-zero and invalid input. Nothing is stored between sessions. | — |
+| api | Static/Page Server (API) | FastAPI 0.115 | Serves the calculator page and exposes a health check. Does no calculation and holds no business logic -- all arithmetic is client-side. Named per the approved stack. | — |
+| db | PostgreSQL (unused) | PostgreSQL 16 | Listed in the approved stack for completeness. This product stores no data, so no tables are created and the application neither reads nor writes to it. | — |
 
 ```mermaid
 graph TD
-  c_web_spa["Calculator Web App"]
-  c_api["Static Serving API"]
+  c_spa["Calculator Web App (SPA)"]
+  c_api["Static/Page Server (API)"]
   c_db["PostgreSQL (unused)"]
 ```
 <!-- sdlc:auto:end building-blocks -->
@@ -126,45 +104,33 @@ graph TD
 <!-- sdlc:auto:start runtime -->
 ## Runtime View
 
-### Evaluate an arithmetic calculation
+### Evaluate a basic arithmetic calculation
 
-User enters operands and an operator via buttons or keyboard, presses equals, and the SPA evaluates the expression in-browser and shows the result. Division by zero and incomplete/invalid entries yield a friendly message instead of a crash. Covers US-001, US-002, US-006, US-008, US-009.
+User enters an operand, an operator, a second operand and equals via on-screen buttons or keyboard. The SPA keeps the entry in component state, updates the display on each input, and computes the result client-side on equals. Division by zero and malformed entries produce a friendly message instead of a crash.
 
-- **Components:** web_spa
-- **Modules:** CalculatorView, useCalculatorState, evaluate, inputReducer, keyboardHandler
-- **Key functions:** applyDigit(state, digit), applyOperator(state, op), applyPercent(state), evaluate(state), formatDisplay(value), handleKey(event)
-
-```mermaid
-sequenceDiagram
-  participant User
-  participant View as CalculatorView
-  participant State as useCalculatorState
-  participant Eval as evaluate
-  User->>View: press 8, then divide, then 2, then equals
-  View->>State: dispatch digit and operator actions
-  State->>Eval: evaluate(current expression)
-  Eval-->>State: result 4 or friendly error
-  State-->>View: updated display value
-  View-->>User: shows 4 or Cannot divide by zero
-```
-
-### Clear and reset
-
-User presses clear to discard the current value or in-progress calculation, or to dismiss an error message, returning the display to 0. Covers US-007.
-
-- **Components:** web_spa
-- **Modules:** CalculatorView, useCalculatorState, inputReducer
-- **Key functions:** reset(state)
+- **Components:** spa
+- **Modules:** CalculatorApp, useCalculatorState, evaluate, formatDisplay, keyboardHandler
+- **Key functions:** inputDigit(digit), inputOperator(op), applyPercent(), evaluate(expr), clear(), handleKeyDown(event), formatDisplay(value)
 
 ```mermaid
 sequenceDiagram
-  participant User
-  participant View as CalculatorView
-  participant State as useCalculatorState
-  User->>View: press clear
-  View->>State: dispatch reset
-  State-->>View: display set to 0, error cleared
-  View-->>User: ready for a new calculation
+  participant U as User
+  participant UI as Buttons/Keyboard
+  participant S as useCalculatorState
+  participant E as evaluate
+  participant D as Display
+  U->>UI: press 8, divide, 2, equals
+  UI->>S: inputDigit/inputOperator then evaluate
+  S->>E: evaluate(8 / 2)
+  E-->>S: result 4
+  S->>D: formatDisplay(4)
+  D-->>U: shows 4
+  U->>UI: press 8, divide, 0, equals
+  UI->>S: evaluate(8 / 0)
+  S->>E: evaluate(8 / 0)
+  E-->>S: error Cannot divide by zero
+  S->>D: show friendly message
+  D-->>U: shows Cannot divide by zero
 ```
 <!-- sdlc:auto:end runtime -->
 
@@ -173,20 +139,20 @@ sequenceDiagram
 
 | Name | Service | Runtime | Scaling | Environment |
 |---|---|---|---|---|
-| Calculator SPA Host | S3 static website (built React 19 bundle) | Static assets over HTTPS | Serverless/static — scales automatically with request volume at near-zero cost | dev |
-| Serving API | FastAPI 0.115 on a small AWS compute instance | Python 3.12 / Uvicorn | Single small instance; sufficient as it serves only a health check | dev |
-| PostgreSQL (unused) | Amazon RDS for PostgreSQL 16 | PostgreSQL 16 | Smallest instance; provisioned for stack completeness, carries no data | dev |
+| SPA Static Host | AWS S3 + CloudFront (static website) | Static assets (React 19 build) | CDN edge caching; scales automatically with traffic | dev |
+| Page/Health API | AWS (container or App Runner) | FastAPI 0.115 on Python 3.12 (Uvicorn) | Single small instance; scale-to-low for near-zero cost | dev |
+| PostgreSQL (provisioned, unused) | AWS RDS for PostgreSQL 16 | PostgreSQL 16 | Smallest instance; no application traffic | dev |
 
 | Source | Target | Protocol |
 |---|---|---|
-| Calculator SPA Host | Serving API | HTTPS |
+| SPA Static Host | Page/Health API | HTTPS |
 
 ```mermaid
 graph LR
-  n_Calculator_SPA_Host["Calculator SPA Host<br/>S3 static website (built React 19 bundle)"]
-  n_Serving_API["Serving API<br/>FastAPI 0.115 on a small AWS compute instance"]
-  n_PostgreSQL__unused_["PostgreSQL (unused)<br/>Amazon RDS for PostgreSQL 16"]
-  n_Calculator_SPA_Host -->|"HTTPS"| n_Serving_API
+  n_SPA_Static_Host["SPA Static Host<br/>AWS S3 + CloudFront (static website)"]
+  n_Page_Health_API["Page/Health API<br/>AWS (container or App Runner)"]
+  n_PostgreSQL__provisioned__unused_["PostgreSQL (provisioned, unused)<br/>AWS RDS for PostgreSQL 16"]
+  n_SPA_Static_Host -->|"HTTPS"| n_Page_Health_API
 ```
 <!-- sdlc:auto:end deployment-view -->
 

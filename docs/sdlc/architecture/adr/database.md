@@ -2,22 +2,23 @@
 # ADR-0003: Use PostgreSQL 16 for Database
 
 Status: Accepted  
-Date: 2026-11-23
+Date: 2026-11-24
 
 ## Context and Problem Statement
 
-Which Database technology does the project use? Decided in architecture v1.
+Which Database technology does the project use? Decided in architecture v2.
 
 ## Considered Options
 
 - PostgreSQL 16
-- None (no persistence needed)
+- SQLite
+- No database
 
 ## Decision Outcome
 
-Chosen option: PostgreSQL 16, because Named in the approved stack for completeness. The calculator stores nothing between sessions and has no accounts, so no schema exists and the database is never read or written.
+Chosen option: PostgreSQL 16, because Named in the approved stack for completeness. The product stores nothing between sessions and has no accounts, so no schema is defined and no queries are issued.
 
 ## Consequences
 
-Provisioning an unused database adds a small cost and footprint; it is kept only to honour the approved stack and remains empty.
+It is provisioned but unused, so it adds cost and a node for no functional gain; it can be dropped for a truly minimal dev environment since nothing reads or writes to it.
 <!-- sdlc:auto:end adr -->
